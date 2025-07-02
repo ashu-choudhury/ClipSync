@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "405695293779",
+    "project_id": "clip-sync-82905",
+    "storage_bucket": "clip-sync-82905.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:405695293779:android:9112eb20a52b5a6e6b19a6",
+        "android_client_info": {
+          "package_name": "com.ashu.clipsync"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "405695293779-thvfrargv3q5n47i3tv83d5p2erm46ai.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ashu.clipsync",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "405695293779-2gte44oe9aan8kcnj2oftn2tt7vac2n7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcVlpF0Fs1N9cDbdRn6XgX6oZINXj9t6E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "405695293779-2gte44oe9aan8kcnj2oftn2tt7vac2n7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

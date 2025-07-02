@@ -3,6 +3,7 @@ package com.ashu.clipsync.services
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -10,21 +11,40 @@ import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import com.ashu.clipsync.helpers.logToFile
+import io.ably.lib.realtime.AblyRealtime
+import io.ably.lib.types.ClientOptions
 
 class ClipboardSync: Service() {
     private lateinit var clipboardManager: ClipboardManager
     private val channelId = "ClipboardSyncChannel"
     private val notificationId = 1
-
+    private lateinit var ably: AblyRealtime
+    private var sink = true
+    private var currentClipboardText = ""
     override fun onCreate() {
         super.onCreate()
-//        setNotification()
+        val options = ClientOptions("FpOJ7Q.mL0X1w:cOs9eYnIXR7sHXQ1sNwyApmZ3MrzERp_gJoOcW_bp3U")
+        ably = AblyRealtime(options)
+        val channel = ably.channels.get("data")
+        channel.subscribe("clipboard") { text ->
+            if (currentClipboardText == text.data.toString()) return@subscribe
+            val clip = ClipData.newPlainText("Remote Clipboard", text.data.toString())
+
+            clipboardManager.setPrimaryClip(clip)
+            currentClipboardText = text.data.toString()
+        }
+        setNotification()
+
+        logToFile("service start date! ",applicationContext)
         clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboardManager.addPrimaryClipChangedListener {
             val clipData = clipboardManager.primaryClip
             if (clipData != null && clipData.itemCount > 0) {
                 val text = clipData.getItemAt(0).text.toString()
-                sendDataInPc(text)
+//                if (currentClipboardText == text) return@addPrimaryClipChangedListener
+                channel.publish("clipboard", text)
+                currentClipboardText = text
             }
         }
     }
@@ -62,7 +82,4 @@ private fun setNotification() {
         return START_STICKY
     }
 
-    private fun sendDataInPc(text: String) {
-        // currently not implemented
-    }
 }
