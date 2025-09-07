@@ -11,23 +11,31 @@ import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import com.ashu.clipsync.AppSession
 import com.ashu.clipsync.helpers.logToFile
 import io.ably.lib.realtime.AblyRealtime
 import io.ably.lib.types.ClientOptions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class ClipboardSync: Service() {
     private lateinit var clipboardManager: ClipboardManager
     private val channelId = "ClipboardSyncChannel"
     private val notificationId = 1
     private lateinit var ably: AblyRealtime
-    private var sink = true
+    private lateinit var ablyChannel: io.ably.lib.realtime.Channel
     private var currentClipboardText = ""
+    private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     override fun onCreate() {
         super.onCreate()
-        val options = ClientOptions("FpOJ7Q.mL0X1w:cOs9eYnIXR7sHXQ1sNwyApmZ3MrzERp_gJoOcW_bp3U")
+        val options = ClientOptions("__api-key__")
         ably = AblyRealtime(options)
-        val channel = ably.channels.get("data")
-        channel.subscribe("clipboard") { text ->
+         ablyChannel = ably.channels.get(AppSession.user?.email)
+        ablyChannel.subscribe("clipboard") { text ->
             if (currentClipboardText == text.data.toString()) return@subscribe
             val clip = ClipData.newPlainText("Remote Clipboard", text.data.toString())
 
@@ -38,13 +46,21 @@ class ClipboardSync: Service() {
 
         logToFile("service start date! ",applicationContext)
         clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboardManager.addPrimaryClipChangedListener {
-            val clipData = clipboardManager.primaryClip
-            if (clipData != null && clipData.itemCount > 0) {
-                val text = clipData.getItemAt(0).text.toString()
-//                if (currentClipboardText == text) return@addPrimaryClipChangedListener
-                channel.publish("clipboard", text)
-                currentClipboardText = text
+        serviceScope.launch {
+            while (true) {
+                val clipData = clipboardManager.primaryClip
+                if (clipData != null && clipData.itemCount > 0) {
+                    val item = clipData.getItemAt(0)
+                    val newText = item?.text?.toString() ?: continue
+
+                    if (newText != currentClipboardText) {
+                        currentClipboardText = newText
+                        logToFile("Coroutine Polling: $newText", applicationContext)
+                        ablyChannel.publish("clipboard", newText)
+                    }
+
+                }
+                delay(1000)
             }
         }
     }
@@ -52,6 +68,7 @@ class ClipboardSync: Service() {
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
+
 private fun setNotification() {
     val channel = NotificationChannel(
         channelId,
@@ -73,7 +90,7 @@ private fun setNotification() {
 }
 
     override fun onDestroy() {
-        clipboardManager.removePrimaryClipChangedListener { }
+        serviceScope.cancel()
         super.onDestroy()
     }
 

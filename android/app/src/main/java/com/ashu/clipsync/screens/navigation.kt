@@ -1,7 +1,6 @@
 package com.ashu.clipsync.screens
 
 import android.content.Intent
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
@@ -15,7 +14,7 @@ import com.ashu.clipsync.services.ClipboardSync
 fun AppNav(navController: NavHostController){
     NavHost(navController = navController, startDestination = Routes.SignIn) {
         composable(Routes.Home) {
-            Text("helloi!")
+            HomeScreen(navController)
         }
 
         composable(Routes.SignIn) {

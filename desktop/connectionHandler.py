@@ -14,7 +14,7 @@ async def main():
 		return
 	global _running
 	_running = True
-	API_KEY = "FpOJ7Q.mL0X1w:cOs9eYnIXR7sHXQ1sNwyApmZ3MrzERp_gJoOcW_bp3U"
+	API_KEY = "__api-key__"
 	client = AblyRealtime(API_KEY)
 	channel = client.channels.get(getEmail())
 	def on_connection_state_change(state_change):
